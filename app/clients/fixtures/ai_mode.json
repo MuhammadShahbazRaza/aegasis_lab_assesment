@@ -1,0 +1,47 @@
+{
+  "version": "0.1.20241120",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "4.1120 sec.",
+  "cost": 0.006,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "11150000-0000-0000-0000-000000000002",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "3.9902 sec.",
+      "cost": 0.006,
+      "result_count": 1,
+      "data": {
+        "api": "serp",
+        "function": "live",
+        "se": "google",
+        "se_type": "ai_mode",
+        "keyword": "__KEYWORD__",
+        "language_code": "en",
+        "location_name": "United States"
+      },
+      "result": [
+        {
+          "keyword": "__KEYWORD__",
+          "type": "ai_mode",
+          "se_domain": "google.com",
+          "location_code": 2840,
+          "language_code": "en",
+          "datetime": "__DATETIME__",
+          "item_types": ["ai_mode_message"],
+          "items_count": 1,
+          "items": [
+            {
+              "type": "ai_mode_message",
+              "text": "__ANSWER__",
+              "references": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

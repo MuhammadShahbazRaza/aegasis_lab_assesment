@@ -1,0 +1,790 @@
+<title>DAG Agent Tayyari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --paper:#F7F5F1; --paper-2:#FFFFFF; --paper-3:#EDEAE4;
+  --ink:#16242A; --ink-2:#3C5058; --ink-3:#6B8089;
+  --rule:#DAD5CC; --rule-2:#C7C0B4;
+  --teal:#0D6C6E; --teal-2:#0A5456; --teal-wash:#E2EFEE;
+  --ochre:#B0670C; --ochre-wash:#F6EBDA;
+  --good:#2C7150; --bad:#A33B32;
+  --code-bg:#12242A; --code-ink:#DCE7E5;
+  --shadow:0 1px 2px rgba(22,36,42,.06),0 8px 24px -16px rgba(22,36,42,.28);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#10191D; --paper-2:#16232A; --paper-3:#1D2E36;
+    --ink:#E8EDEC; --ink-2:#AFC1C4; --ink-3:#7E9298;
+    --rule:#26383F; --rule-2:#33484F;
+    --teal:#5BB5AE; --teal-2:#84CCC4; --teal-wash:#15302F;
+    --ochre:#D9974A; --ochre-wash:#2C2317;
+    --good:#5FB287; --bad:#DB7C72;
+    --code-bg:#0A1418; --code-ink:#CFDEDC;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 26px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10191D; --paper-2:#16232A; --paper-3:#1D2E36;
+  --ink:#E8EDEC; --ink-2:#AFC1C4; --ink-3:#7E9298;
+  --rule:#26383F; --rule-2:#33484F;
+  --teal:#5BB5AE; --teal-2:#84CCC4; --teal-wash:#15302F;
+  --ochre:#D9974A; --ochre-wash:#2C2317;
+  --good:#5FB287; --bad:#DB7C72;
+  --code-bg:#0A1418; --code-ink:#CFDEDC;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 26px -18px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:17px; line-height:1.62; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 96px;display:grid;grid-template-columns:230px minmax(0,1fr);gap:52px;align-items:start}
+@media(max-width:900px){.wrap{grid-template-columns:1fr;gap:0;padding:0 18px 64px}}
+
+header.top{border-bottom:2px solid var(--ink);margin-bottom:40px;padding:44px 0 26px}
+.eyebrow{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);margin:0 0 14px}
+h1{font-family:Bitter,Georgia,serif;font-weight:700;font-size:clamp(34px,5.4vw,52px);line-height:1.08;margin:0 0 14px;letter-spacing:-.015em;text-wrap:balance}
+.sub{font-size:19px;color:var(--ink-2);max-width:60ch;margin:0}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.chip{font-family:"JetBrains Mono",monospace;font-size:11.5px;padding:4px 10px;border:1px solid var(--rule-2);border-radius:2px;color:var(--ink-2);background:var(--paper-2)}
+
+nav.toc{position:sticky;top:20px;font-size:14.5px}
+@media(max-width:900px){nav.toc{position:static;margin-bottom:36px;border:1px solid var(--rule);padding:16px 18px;background:var(--paper-2)}}
+nav.toc p{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 12px}
+nav.toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+nav.toc a{display:flex;gap:9px;padding:5px 0;color:var(--ink-2);text-decoration:none;border-bottom:1px solid transparent;line-height:1.35}
+nav.toc a:hover{color:var(--teal)}
+nav.toc a span{font-family:"JetBrains Mono",monospace;font-size:11.5px;color:var(--ink-3);padding-top:2px}
+nav.toc a:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+
+section{margin-bottom:64px;scroll-margin-top:20px}
+h2{font-family:Bitter,Georgia,serif;font-weight:700;font-size:30px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em;text-wrap:balance;display:flex;gap:14px;align-items:baseline}
+h2 .n{font-family:"JetBrains Mono",monospace;font-size:14px;color:var(--teal);font-weight:600}
+h2+.lede{color:var(--ink-2);font-size:17.5px;margin:0 0 26px;max-width:64ch}
+h3{font-family:Bitter,Georgia,serif;font-weight:600;font-size:20px;margin:34px 0 10px;letter-spacing:-.005em}
+h4{font-family:"Source Sans 3",sans-serif;font-weight:700;font-size:16px;margin:22px 0 6px;color:var(--ink)}
+p{margin:0 0 15px;max-width:68ch}
+ul,ol{max-width:68ch;padding-left:20px;margin:0 0 16px}
+li{margin-bottom:7px}
+strong{font-weight:700}
+code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.87em;background:var(--paper-3);padding:1.5px 5px;border-radius:2px;color:var(--ink)}
+a{color:var(--teal)}
+
+.callout{border-left:3px solid var(--ochre);background:var(--ochre-wash);padding:15px 18px;margin:22px 0;max-width:68ch}
+.callout p:last-child{margin-bottom:0}
+.callout.t{border-left-color:var(--teal);background:var(--teal-wash)}
+.callout .lbl{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ochre);display:block;margin-bottom:5px}
+.callout.t .lbl{color:var(--teal)}
+
+pre{background:var(--code-bg);color:var(--code-ink);padding:16px 18px;overflow-x:auto;font-family:"JetBrains Mono",monospace;font-size:13px;line-height:1.6;margin:0 0 18px;border-radius:3px}
+pre code{background:none;padding:0;color:inherit;font-size:inherit}
+
+.tbl{width:100%;overflow-x:auto;margin:0 0 20px}
+table{border-collapse:collapse;width:100%;font-size:15.5px;min-width:520px}
+th{text-align:left;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);border-bottom:1.5px solid var(--rule-2);padding:0 14px 8px 0;font-weight:600;vertical-align:bottom}
+td{padding:10px 14px 10px 0;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.5}
+td:first-child{white-space:nowrap}
+td code{font-size:13px;white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+
+.steps{list-style:none;padding:0;counter-reset:s;max-width:none}
+.steps li{counter-increment:s;display:grid;grid-template-columns:34px 1fr;gap:16px;padding:16px 0;border-bottom:1px solid var(--rule);margin:0}
+.steps li:last-child{border-bottom:none}
+.steps li::before{content:counter(s);font-family:"JetBrains Mono",monospace;font-size:13px;font-weight:600;color:var(--paper-2);background:var(--teal);width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:50%;margin-top:2px}
+.steps b{display:block;font-family:Bitter,serif;font-size:17px;margin-bottom:3px}
+.steps span{color:var(--ink-2);font-size:16px}
+.steps em{font-style:normal;font-family:"JetBrains Mono",monospace;font-size:12.5px;color:var(--teal);display:block;margin-top:4px}
+
+figure{margin:26px 0;padding:0}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-size:14px;color:var(--ink-3);margin-top:10px;font-style:italic}
+
+details{border:1px solid var(--rule);background:var(--paper-2);margin-bottom:8px;border-radius:3px}
+details[open]{border-color:var(--rule-2);box-shadow:var(--shadow)}
+summary{cursor:pointer;padding:13px 16px;font-weight:600;font-size:16.5px;list-style:none;display:flex;gap:11px;align-items:flex-start;line-height:1.45}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"?";font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--teal);border:1.5px solid var(--teal);width:20px;height:20px;min-width:20px;display:flex;align-items:center;justify-content:center;border-radius:50%;margin-top:2px;font-weight:600}
+details[open] summary::before{content:"×";background:var(--teal);color:var(--paper-2)}
+summary:hover{color:var(--teal)}
+summary:focus-visible{outline:2px solid var(--teal);outline-offset:-2px}
+.ans{padding:0 16px 15px 47px;border-top:1px solid var(--rule)}
+.ans p:first-child{margin-top:14px}
+.ans p:last-child,.ans ul:last-child{margin-bottom:0}
+@media(max-width:600px){.ans{padding-left:16px}}
+
+.qgroup{margin:30px 0}
+.qgroup>h3{margin-bottom:14px;padding-bottom:7px;border-bottom:1.5px solid var(--rule-2)}
+.ctrl{display:flex;gap:9px;margin:0 0 20px}
+.ctrl button{font-family:"JetBrains Mono",monospace;font-size:12px;padding:6px 13px;border:1px solid var(--rule-2);background:var(--paper-2);color:var(--ink-2);cursor:pointer;border-radius:2px}
+.ctrl button:hover{border-color:var(--teal);color:var(--teal)}
+.ctrl button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin:0 0 20px}
+.grid2>div{background:var(--paper-2);padding:15px 17px}
+.grid2 h4{margin:0 0 5px}
+.grid2 p{margin:0;font-size:15.5px;color:var(--ink-2)}
+
+.yn{font-family:"JetBrains Mono",monospace;font-size:11px;padding:2px 7px;border-radius:2px;white-space:nowrap;font-weight:600}
+.yn.y{background:var(--teal-wash);color:var(--teal)}
+.yn.n{background:var(--ochre-wash);color:var(--ochre)}
+
+footer{border-top:2px solid var(--ink);padding-top:20px;margin-top:20px;color:var(--ink-3);font-size:14.5px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+@media print{
+  @page{margin:14mm 13mm}
+  body{background:#fff;color:#16242A;font-size:10.5pt;line-height:1.5}
+  .wrap{display:block;max-width:none;padding:0}
+  nav.toc,.ctrl{display:none}
+  header.top{padding:0 0 14px;margin-bottom:22px;border-bottom:2px solid #16242A}
+  h1{font-size:26pt}
+  .sub{font-size:11.5pt}
+  section{margin-bottom:26px}
+  h2{font-size:16pt;page-break-after:avoid;border-top:1px solid #DAD5CC;padding-top:14px}
+  h3,h4{page-break-after:avoid}
+  h2+.lede{font-size:11pt}
+  details{page-break-inside:avoid;border:1px solid #C7C0B4;box-shadow:none;margin-bottom:6px}
+  summary{font-size:11pt;padding:9px 12px}
+  summary::before{content:"Q";background:none!important;color:#0D6C6E;border-color:#0D6C6E}
+  .ans{padding:0 12px 11px 12px;border-top:1px solid #DAD5CC}
+  pre{background:#F2F0EC;color:#16242A;border:1px solid #DAD5CC;font-size:8.5pt;page-break-inside:avoid}
+  table{font-size:9.5pt;min-width:0}
+  .tbl{overflow:visible}
+  tr,figure,.steps li,.grid2,.callout{page-break-inside:avoid}
+  figure svg{max-width:150mm;margin:0 auto}
+  a{color:#0D6C6E;text-decoration:none}
+  footer{border-top:1px solid #16242A}
+}
+</style>
+
+<header class="top">
+  <div class="wrap" style="display:block;padding-bottom:0">
+    <p class="eyebrow">Aegasis Labs &middot; AI Agent Engineer</p>
+    <h1>DAG Agent Tayyari</h1>
+    <p class="sub">Agentic Search Intelligence project ki poori samajh — ye kya hai, kaise kaam karta hai, har file ka kaam, aur interview mein jo sawal aa sakte hain unke jawab ke saath.</p>
+    <div class="meta">
+      <span class="chip">LangGraph DAG</span>
+      <span class="chip">9 nodes</span>
+      <span class="chip">5 agents</span>
+      <span class="chip">124 tests</span>
+      <span class="chip">Python + FastAPI</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<nav class="toc">
+  <p>Fehrist</p>
+  <ol>
+    <li><a href="#s1"><span>01</span>Ye tool kya hai</a></li>
+    <li><a href="#s2"><span>02</span>Kaam kaise karta hai</a></li>
+    <li><a href="#s3"><span>03</span>DAG aur Agent kya hai</a></li>
+    <li><a href="#s4"><span>04</span>Har file ka kaam</a></li>
+    <li><a href="#s5"><span>05</span>Tech stack aur kyun</a></li>
+    <li><a href="#s6"><span>06</span>Interview ke sawal</a></li>
+    <li><a href="#s7"><span>07</span>Demo kaise dena hai</a></li>
+    <li><a href="#s8"><span>08</span>Sach jo khud batana hai</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<section id="s1">
+  <h2><span class="n">01</span>Ye tool kya hai</h2>
+  <p class="lede">Ek line mein: <strong>ye batata hai ke tumhara brand Google aur AI jawabon mein dikhta hai ya nahi — aur agar nahi, to kya karna chahiye.</strong></p>
+
+  <h3>Problem kya hai</h3>
+  <p>Pehle log Google pe search karte the, 10 links aate the, aur jo list mein hota tha uske paas customer jata tha.</p>
+  <p>Ab log ChatGPT ya Gemini se seedha poochte hain: <em>"best SEO tool kaunsa hai?"</em> AI ek jawab de deta hai jismein teen-chaar naam hote hain. Agar us jawab mein tumhara naam nahi aaya, to customer ko pata hi nahi chalega ke tum mojood ho — chahe tumhara product sabse acha ho.</p>
+
+  <div class="callout t">
+    <span class="lbl">Aegasis ka business</span>
+    <p>Aegasis Labs isi cheez ka software banati hai — companies ko batati hai ke wo AI ke jawabon mein kahan khade hain. Isiliye assessment mein yehi banwaya gaya.</p>
+  </div>
+
+  <h3>Tool teen jagah check karta hai</h3>
+  <div class="grid2">
+    <div><h4>Google organic</h4><p>Blue links mein tumhari website kaunse number pe hai?</p></div>
+    <div><h4>Google AI Overview</h4><p>Google ke apne AI jawab mein tumhara naam cite hua ya nahi?</p></div>
+    <div><h4>LLM answers</h4><p>ChatGPT jaise assistant ke jawab mein tumhara brand aata hai?</p></div>
+  </div>
+
+  <h3>Asli misaal — jo humne chalaya</h3>
+  <p>Input diya: <code>Surfer SEO</code>, website <code>surferseo.com</code>, competitors <code>clearscope.io</code>, <code>marketmuse.com</code>, <code>frase.io</code>.</p>
+  <p>Tool ne khud faisla kiya ke Google pe ye search karna hai: <strong>"best SEO content optimization tool"</strong> — kyunki jo banda ye search karta hai wo kharidne ke liye tayyar hota hai.</p>
+  <p>Asli Google se jo aaya:</p>
+<pre><code>#1   marketermilk.com
+#4   rankability.com
+#13  reddit.com
+#16  g2.com
+#18  surferseo.com   &lt;&lt;&lt; yahan hai
+#20  wordstream.com</code></pre>
+  <p><strong>Finding:</strong> Surfer SEO number 18 pe hai — matlab page 2. Aur 90% log page 2 pe jaate hi nahi. Apni hi field ki search pe page 1 se bahar hona ek bara masla hai. Tool ne yehi report kiya, aur saath mein content ki suggestion bhi di.</p>
+</section>
+
+<section id="s2">
+  <h2><span class="n">02</span>Kaam kaise karta hai</h2>
+  <p class="lede">Paanch alag "agent" hain. Har ek sirf <strong>ek</strong> kaam karta hai — koi bhi do kaam nahi karta. Ye assessment ki sabse bari requirement thi.</p>
+
+  <ol class="steps">
+    <li><b>Query Planner</b><span>Sawal parhta hai aur faisla karta hai ke Google pe kya search karna hai. Ye LLM (Groq) use karta hai. Khud search nahi karta — sirf plan banata hai.</span><em>app/graph/nodes/planner.py</em></li>
+    <li><b>Retrieval Agent</b><span>Plan ke mutabiq DataForSEO ko call karta hai. Sirf data laata hai — na parhta hai, na samajhta hai, na faisla karta hai.</span><em>app/graph/nodes/retrieval.py</em></li>
+    <li><b>Extraction / Normalizer</b><span>Har API ka jawab alag shakal mein aata hai. Ye sab ko ek jaisi shakal mein badalta hai taake aage wale ko farq na pata chale ke data kahan se aaya.</span><em>app/graph/nodes/extraction.py</em></li>
+    <li><b>Analysis / Synthesis</b><span>Saaf data par sochta hai — score nikalta hai, ranking karta hai, aur batata hai kahan gap hai.</span><em>app/graph/nodes/analysis.py</em></li>
+    <li><b>Report Agent</b><span>Final report banata hai — JSON aur insaan ke parhne wali summary dono. Naya data nahi laata, dobara score nahi karta.</span><em>app/graph/nodes/report.py</em></li>
+  </ol>
+
+  <div class="callout">
+    <span class="lbl">Yaad rakho</span>
+    <p>Interviewer poochhega <em>"paanch agent kyun, teen kyun nahi?"</em> — Jawab: har agent ka <strong>failure alag tarah ka</strong> hai. Retrieval network ki wajah se fail hoti hai aur retry chahti hai. Extraction data ki shakal badalne se fail hoti hai. Analysis LLM ke ghalat jawab se fail hoti hai. Agar milaa doge to ek <code>try/except</code> teen alag masloon ko cover karega, aur pata nahi chalega ke kaunsa hissa kharab hua.</p>
+  </div>
+</section>
+
+<section id="s3">
+  <h2><span class="n">03</span>DAG aur Agent kya hai</h2>
+  <p class="lede">Ye do lafz poore project ki buniyaad hain. Interview mein pakka poochhe jayenge.</p>
+
+  <h3>Agent kya hai</h3>
+  <p>Simple lafzon mein: <strong>agent ek chhota worker hai jo ek kaam karta hai.</strong></p>
+  <p>Sochо ek restaurant kitchen: ek banda sirf sabzi kaatta hai, doosra sirf pakata hai, teesra sirf plate lagata hai. Har banda apna kaam janta hai. Koi teenon kaam nahi karta.</p>
+  <p>Hamare project mein har agent ek Python function hai jo <strong>state (maujuda halat) leta hai</strong> aur <strong>apna hissa wapas deta hai</strong>. Bas.</p>
+
+  <h3>DAG kya hai</h3>
+  <p>DAG ka poora naam <strong>Directed Acyclic Graph</strong> hai. Teen lafz alag alag samjho:</p>
+  <div class="grid2">
+    <div><h4>Graph</h4><p>Boxes aur teer (arrows) ka naqsha. Har box ek kaam, har teer batata hai aage kya hoga.</p></div>
+    <div><h4>Directed</h4><p>Teer sirf ek taraf jate hain. A se B jate ho to B se A wapas nahi aa sakte.</p></div>
+    <div><h4>Acyclic</h4><p>Koi gol chakkar nahi. Kabhi bhi wahin wapas nahi pohanchte jahan se chale the — isliye kabhi infinite loop nahi banta.</p></div>
+  </div>
+
+  <p><strong>Aasan misaal:</strong> metro ka naqsha DAG jaisa hai — train aage barhti hai, peeche nahi aati, aur beech mein raaste alag alag mud sakte hain. Lekin ek hi station pe do baar nahi aati.</p>
+
+  <h3>Hamara DAG</h3>
+  <figure>
+    <svg viewBox="0 0 760 690" role="img" aria-label="Pipeline ka DAG naqsha">
+      <defs>
+        <marker id="ar" markerWidth="9" markerHeight="9" refX="7.5" refY="3.2" orient="auto">
+          <path d="M0,0 L7.5,3.2 L0,6.4 Z" fill="var(--ink-3)"/>
+        </marker>
+      </defs>
+      <g font-family="JetBrains Mono, monospace" font-size="12">
+        <g stroke="var(--ink-3)" stroke-width="1.4" fill="none" marker-end="url(#ar)">
+          <path d="M380,54 L380,84"/>
+          <path d="M380,120 L380,214"/>
+          <path d="M285,102 L150,102 L150,149"/>
+          <path d="M150,185 L150,232 L284,232"/>
+          <path d="M380,250 L380,279"/>
+          <path d="M380,315 L380,409"/>
+          <path d="M285,297 L150,297 L150,344"/>
+          <path d="M475,297 L610,297 L610,469"/>
+          <path d="M150,380 L150,427 L284,427"/>
+          <path d="M475,427 L609,427"/>
+          <path d="M380,445 L380,474"/>
+          <path d="M380,510 L380,539"/>
+          <path d="M610,510 L610,557 L476,557"/>
+          <path d="M380,575 L380,604"/>
+        </g>
+        <g text-anchor="middle">
+          <rect x="305" y="20" width="150" height="34" rx="17" fill="var(--paper-3)" stroke="var(--rule-2)"/>
+          <text x="380" y="42" fill="var(--ink-2)">START</text>
+
+          <rect x="285" y="85" width="190" height="35" fill="var(--teal-wash)" stroke="var(--teal)" stroke-width="1.5"/>
+          <text x="380" y="107" fill="var(--teal)" font-weight="600">query_planner</text>
+
+          <rect x="65" y="149" width="170" height="35" fill="var(--ochre-wash)" stroke="var(--ochre)"/>
+          <text x="150" y="171" fill="var(--ochre)">plan_fallback</text>
+
+          <rect x="285" y="214" width="190" height="36" fill="var(--teal-wash)" stroke="var(--teal)" stroke-width="1.5"/>
+          <text x="380" y="230" fill="var(--teal)" font-weight="600">retrieval_worker</text>
+          <text x="380" y="244" fill="var(--ink-3)" font-size="10.5">&#215; N — saath saath</text>
+
+          <rect x="285" y="279" width="190" height="35" fill="var(--paper-2)" stroke="var(--ink-2)" stroke-dasharray="4 3"/>
+          <text x="380" y="301" fill="var(--ink)">retrieval_gate</text>
+
+          <rect x="65" y="344" width="170" height="36" fill="var(--ochre-wash)" stroke="var(--ochre)"/>
+          <text x="150" y="360" fill="var(--ochre)" font-size="11">partial_data</text>
+          <text x="150" y="373" fill="var(--ochre)" font-size="11">_fallback</text>
+
+          <rect x="285" y="409" width="190" height="35" fill="var(--teal-wash)" stroke="var(--teal)" stroke-width="1.5"/>
+          <text x="380" y="431" fill="var(--teal)" font-weight="600">extraction</text>
+
+          <rect x="285" y="474" width="190" height="35" fill="var(--teal-wash)" stroke="var(--teal)" stroke-width="1.5"/>
+          <text x="380" y="496" fill="var(--teal)" font-weight="600">analysis</text>
+
+          <rect x="525" y="469" width="170" height="41" fill="var(--ochre-wash)" stroke="var(--ochre)"/>
+          <text x="610" y="485" fill="var(--ochre)" font-size="11">no_data</text>
+          <text x="610" y="499" fill="var(--ochre)" font-size="11">_fallback</text>
+
+          <rect x="285" y="539" width="190" height="36" fill="var(--teal-wash)" stroke="var(--teal)" stroke-width="1.5"/>
+          <text x="380" y="562" fill="var(--teal)" font-weight="600">report_assembler</text>
+
+          <rect x="305" y="604" width="150" height="34" rx="17" fill="var(--paper-3)" stroke="var(--rule-2)"/>
+          <text x="380" y="626" fill="var(--ink-2)">END</text>
+        </g>
+        <g fill="var(--ink-3)" font-size="10.5">
+          <text x="222" y="96" text-anchor="end">plan khali</text>
+          <text x="222" y="291" text-anchor="end">kam data</text>
+          <text x="490" y="291">kuch nahi mila</text>
+          <text x="392" y="340">kaafi data</text>
+          <text x="490" y="421">record nahi bane</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>Teal boxes asli kaam karte hain. Ochre boxes tab chalte hain jab kuch kharab ho. Katri hui line (retrieval_gate) faisla karti hai ke aage kaunsa raasta lena hai.</figcaption>
+  </figure>
+
+  <h3>Teen faisle ke mor</h3>
+  <ol>
+    <li><strong>Planner ke baad:</strong> agar LLM ne koi kaam ka plan nahi diya, to <code>plan_fallback</code> pe chale jao — jahan ek tayyar-shuda simple plan rakha hai.</li>
+    <li><strong>Retrieval ke baad:</strong> kitna data aaya? Aadha se zyada aaya to normal raasta. Thora aaya to <code>partial_data_fallback</code> — lekin jo aaya hai wo phenkte nahi, use karte hain. Kuch nahi aaya to <code>no_data_fallback</code>.</li>
+    <li><strong>Extraction ke baad:</strong> koi record bana? Nahi to <code>no_data_fallback</code>.</li>
+  </ol>
+
+  <div class="callout t">
+    <span class="lbl">Ye bara point hai</span>
+    <p>Retrieval ek loop nahi hai. LangGraph ka <code>Send</code> use karke <strong>har API call apna alag node ban jati hai</strong> jo saath saath chalti hai. Faida: har call ka apna time, apni retry count, aur apna failure record hota hai. Ek loop mein ye sab ek hi number mein mil jata aur pata na chalta ke kaunsi call slow thi.</p>
+  </div>
+</section>
+
+<section id="s4">
+  <h2><span class="n">04</span>Har file ka kaam</h2>
+  <p class="lede">Poora project 4,900 lines ka hai. Har folder ka apna maqsad hai — neeche folder ke hisaab se sab kuch.</p>
+
+  <h3>Graph — dimagh (app/graph/)</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>File</th><th>Kaam</th></tr></thead>
+    <tbody>
+      <tr><td><code>builder.py</code></td><td>Poora DAG yahan bana hai — kaunsa node kis se juda hai, aur teenon faisle ke mor. <strong>Interview mein sabse pehle ye file kholna.</strong></td></tr>
+      <tr><td><code>state.py</code></td><td>Graph ki "yaaddasht" — kya cheez pass hoti rehti hai. Saath saath chalne wale nodes ka data yahan jur ta hai.</td></tr>
+      <tr><td><code>runtime.py</code></td><td>Wo cheezein jo har node ko chahiye (LLM, executor, settings) — ek jagah rakhi hain taake har node ka signature saaf rahe.</td></tr>
+      <tr><td><code>instrument.py</code></td><td>Har node ke aage-peeche log, time aur metrics khud lag jate hain. Node ka apna code isse chhoota nahi.</td></tr>
+      <tr><td><code>nodes/planner.py</code></td><td>Query Planner agent. LLM se plan banwata hai, phir check karta hai ke plan mein Google aur AI dono cover hue ya nahi.</td></tr>
+      <tr><td><code>nodes/retrieval.py</code></td><td>Retrieval agent — ek call chalata hai. Aur gate jo ginta hai kitni calls kaamyab hui.</td></tr>
+      <tr><td><code>nodes/extraction.py</code></td><td>Har API ke jawab ko ek jaisi shakal mein badalta hai. Domain match karta hai (lookalike domains reject karta hai).</td></tr>
+      <tr><td><code>nodes/analysis.py</code></td><td>Data ko query ke hisaab se jama karta hai, score nikalta hai, aur LLM se findings likhwata hai.</td></tr>
+      <tr><td><code>nodes/report.py</code></td><td>Final report — JSON + markdown summary + content recommendations.</td></tr>
+      <tr><td><code>nodes/fallback.py</code></td><td>Do fallback: ek jab thora data mila, doosra jab kuch nahi mila.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Tools — DataForSEO ko call karne ka tareeqa (app/tools/)</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>File</th><th>Kaam</th></tr></thead>
+    <tbody>
+      <tr><td><code>schemas.py</code></td><td>Har tool ke arguments ki shakal — types, limits, descriptions. Yehi LLM ko batata hai ke kya bhejna hai.</td></tr>
+      <tr><td><code>registry.py</code></td><td>Paanch tools ki list, aur <strong>validation</strong> — LLM jo bhejta hai wo check hota hai. Ghalat ho to reject, crash nahi.</td></tr>
+      <tr><td><code>executor.py</code></td><td>Validation + circuit breaker + retry + timing, sab ek jagah. Nodes seedha HTTP client ko haath nahi lagate.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Resilience — jab cheezein kharab hon (app/resilience/)</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>File</th><th>Kaam</th></tr></thead>
+    <tbody>
+      <tr><td><code>errors.py</code></td><td>Ghalti ki do qismein: <strong>retryable</strong> (timeout, 429, 5xx) aur <strong>permanent</strong> (400, 401, ghalat password). 401 ko 4 baar try karna bewaqoofi hai.</td></tr>
+      <tr><td><code>retry.py</code></td><td>Dobara koshish — har baar intezaar dugna, saath mein random jitter, aur ek maximum limit.</td></tr>
+      <tr><td><code>circuit_breaker.py</code></td><td>Agar ek endpoint baar baar fail ho to usko band kar do — har endpoint ka apna breaker.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Clients — DataForSEO se baat (app/clients/)</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>File</th><th>Kaam</th></tr></thead>
+    <tbody>
+      <tr><td><code>dataforseo.py</code></td><td>Do client: <strong>Live</strong> (asli API — auth, timeouts, error handling) aur <strong>Mock</strong> (asli shakal ke jawab, bina paise ke). Fault injection bhi yahin hai.</td></tr>
+      <tr><td><code>fixtures/*.json</code></td><td>Paanch asli DataForSEO response ki shaklein — mock inhi ko bharta hai.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Observability — kya ho raha hai wo dekhna (app/observability/)</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>File</th><th>Kaam</th></tr></thead>
+    <tbody>
+      <tr><td><code>logging.py</code></td><td>JSON logs. Passwords chhupata hai, lambi cheezein kaat deta hai.</td></tr>
+      <tr><td><code>context.py</code></td><td>Har log line pe <code>run_id</code> khud lag jata hai — ek run ke saare logs ek filter se mil jate hain.</td></tr>
+      <tr><td><code>metrics.py</code></td><td>Har node ka time, kitni calls, kitni fail, kitne tokens.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>API aur Database</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>File</th><th>Kaam</th></tr></thead>
+    <tbody>
+      <tr><td><code>api/routes/profiles.py</code></td><td>Company banao aur dekho.</td></tr>
+      <tr><td><code>api/routes/runs.py</code></td><td>Pipeline chalao, aur ek run ka poora trace dekho.</td></tr>
+      <tr><td><code>api/routes/queries.py</code></td><td>Queries ki list (filter, pagination), recommendations, aur recheck.</td></tr>
+      <tr><td><code>api/schemas.py</code></td><td>Request aur response ki shaklein — validation yahin hoti hai.</td></tr>
+      <tr><td><code>api/errors.py</code></td><td>Saari errors ek jaisi shakal mein — 404, 409, 422, 500.</td></tr>
+      <tr><td><code>db/models.py</code></td><td>Paanch tables: profiles, pipeline_runs, discovered_queries, recommendations, node_executions.</td></tr>
+      <tr><td><code>db/repository.py</code></td><td>Database ke saare sawal ek jagah — routes mein SQL nahi.</td></tr>
+      <tr><td><code>db/types.py</code></td><td>SQLite timezone theek karta hai (warna timestamps ka offset gayab ho jata hai).</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Baqi ahem files</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>File</th><th>Kaam</th></tr></thead>
+    <tbody>
+      <tr><td><code>app/service.py</code></td><td>Sab kuch jorta hai — graph chalao, database mein save karo. Recheck bhi yahin.</td></tr>
+      <tr><td><code>app/scoring.py</code></td><td>Opportunity score ka formula. <strong>LLM nahi, sirf maths.</strong></td></tr>
+      <tr><td><code>app/domain.py</code></td><td>Poore project ke shared data ke saanche.</td></tr>
+      <tr><td><code>app/config.py</code></td><td>Saari settings <code>.env</code> se — koi hardcoded value nahi.</td></tr>
+      <tr><td><code>app/llm/provider.py</code></td><td>Groq / OpenAI / Anthropic / fake — ek env var badal ke provider badal jata hai.</td></tr>
+      <tr><td><code>app/llm/fake.py</code></td><td>Naqli LLM — bina API key ke sab chalta hai aur tests deterministic rehte hain.</td></tr>
+      <tr><td><code>scripts/demo.py</code></td><td>Ek run chalao aur result screen pe dekho.</td></tr>
+      <tr><td><code>scripts/smoke.py</code></td><td>Chalte hue server pe har endpoint check karo.</td></tr>
+      <tr><td><code>scripts/check_dataforseo.py</code></td><td>DataForSEO credentials sahi hain ya nahi.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="s5">
+  <h2><span class="n">05</span>Tech stack aur kyun</h2>
+  <p class="lede">Kuch cheezein assessment ne khud kahin thin, kuch maine chuni. Interview mein ye farq batana faida deta hai.</p>
+
+  <h3>Assessment ne kaha tha</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Cheez</th><th>Kyun</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Python 3.12</strong></td><td>Brief ne Python kaha. 3.12 isliye ke LangGraph ke liye sabse stable hai.</td></tr>
+      <tr><td><strong>LangGraph</strong></td><td>Brief ne saaf kaha: "explicit DAG using LangGraph".</td></tr>
+      <tr><td><strong>Pydantic</strong></td><td>Brief ne kaha tool schemas Pydantic ya JSON schema se banein.</td></tr>
+      <tr><td><strong>DataForSEO</strong></td><td>Brief ne yehi provider kaha.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Maine chuna</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>Cheez</th><th>Kyun ye, koi aur nahi</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Groq</strong></td><td>Free tier, bohat tez, aur tool calling support karta hai. Token count bhi wapas deta hai jo brief ne maanga tha.</td></tr>
+      <tr><td><strong>FastAPI</strong></td><td>Pydantic ke saath hi bana hai — validation aur API docs khud ban jate hain. Flask mein ye sab haath se likhna parta.</td></tr>
+      <tr><td><strong>SQLAlchemy + SQLite</strong></td><td>Take-home ke liye Docker ki zaroorat nahi. Code Postgres pe bhi waisa hi chalega.</td></tr>
+      <tr><td><strong>httpx</strong></td><td><code>requests</code> ke barxilaf connect aur read ka alag alag timeout de sakte ho. DataForSEO jaldi connect hota hai lekin jawab slow deta hai — ye farq zaroori hai.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Jaan bujh kar nahi lagaya</h3>
+  <p>Ye poochha ja sakta hai, isliye jawab yaad rakho:</p>
+  <ul>
+    <li><strong>tenacity (retry library) nahi</strong> — mujhe retry loop ko apni error qismein samajhni thi, <code>Retry-After</code> header maanna tha, aur tests ke liye sleep inject karna tha. Library se ye sab karna khud likhne se zyada code banta.</li>
+    <li><strong>pybreaker nahi</strong> — mujhe har endpoint ka alag breaker aur uska snapshot chahiye tha trace ke liye. 70 lines mein ho gaya.</li>
+    <li><strong>structlog nahi</strong> — stdlib logging + JSON formatter kaafi tha, aur <code>contextvars</code> se correlation ID mil gaya.</li>
+    <li><strong>Prometheus nahi</strong> — brief ne kaha "in-memory summary is sufficient". Lekin jo fields nikalta hoon wo bilkul wahi hain jo Prometheus ko chahiye.</li>
+  </ul>
+  <div class="callout">
+    <span class="lbl">Asal wajah</span>
+    <p>Har cheez chhoti hai, har cheez kisi requirement ke liye zaroori hai, aur har line samjha sakta hoon. <strong>Jo dependency justify na kar sako wo code review mein bojh hai.</strong></p>
+  </div>
+</section>
+
+<section id="s6">
+  <h2><span class="n">06</span>Interview ke sawal</h2>
+  <p class="lede">Pehle khud jawab sochо, phir kholo. Yehi tareeqa yaad rakhne mein madad karta hai.</p>
+  <div class="ctrl">
+    <button type="button" data-all="1">Sab kholo</button>
+    <button type="button" data-all="0">Sab band karo</button>
+  </div>
+
+  <div class="qgroup">
+    <h3>Agent design</h3>
+    <details><summary>Paanch agent kyun banaye, teen kyun nahi?</summary><div class="ans">
+      <p>Kyunki "data laana" aur "data samajhna" ke <strong>failure bilkul alag</strong> hain. Retrieval network ki wajah se fail hoti hai aur retry chahti hai. Extraction tab fail hoti hai jab API apni response ki shakal badal de — wahan ek record chhorna chahiye, poora run nahi. Analysis tab fail hoti hai jab LLM ghalat JSON de. Agar teenon ek jagah hon to ek <code>try/except</code> teen alag masloon ko cover karega, aur report mein ye batana namumkin ho jayega ke kaunsa hissa degrade hua.</p>
+    </div></details>
+
+    <details><summary>retrieval_gate to kuch karta hi nahi lagta — ye alag node kyun hai?</summary><div class="ans">
+      <p>Wo do kaam karta hai jo edge nahi kar sakti: success ratio <strong>nikalta</strong> hai aur usko log aur metrics mein <strong>record</strong> karta hai. Faisla (routing) edge par hai. Alag rakhne ka faida ye hai ke edge function saaf aur sasta rehta hai — LangGraph usay ek se zyada baar bula sakta hai — jabke measurement sirf ek baar hoti hai. Aur saath saath chalne wale retrieval workers ko kahin to jur na hai, wo join point yehi hai.</p>
+    </div></details>
+
+    <details><summary>Planner LLM use karta hai lekin plan_fallback nahi — ye ulta nahi?</summary><div class="ans">
+      <p>Jaan bujh kar. Fallback ka wajood hi is liye hai ke jab model kaam na kare. Agar wo bhi model ko call karta to wo fallback hota hi nahi. Wo jaan bujh kar simple hai — profile se teen seed queries. Uska maqsad planner ki aqal ki naqal karna nahi, balke <strong>kuch na dene ke bajaye ek asli report dena</strong> hai.</p>
+    </div></details>
+  </div>
+
+  <div class="qgroup">
+    <h3>DAG aur LangGraph</h3>
+    <details><summary>LangGraph kyun, seedha functions kyun nahi?</summary><div class="ans">
+      <p>Sach ye hai ke is size pe functions se bhi kaam chal jata. LangGraph teen jagah faida deta hai: <code>Send</code> se parallel fan-out aur khud-ba-khud join; conditional edges structure ki tarah declare hoti hain na ke code mein chhupi <code>if</code> statements; aur state reducers. Teesri cheez hi wo hai jo khud likhne pe ghalat ho jati hai — parallel branches ka data merge karna dekhne mein aasan lagta hai lekin race condition ban jata hai.</p>
+    </div></details>
+
+    <details><summary>Ye waqai DAG hai? Tumhare paas to fallback nodes hain.</summary><div class="ans">
+      <p>Haan — har edge aage jati hai. <code>partial_data_fallback</code> extraction ko jati hai, extraction analysis ya terminal fallback ko, aur dono report pe khatam hote hain. Koi edge peeche nahi jati. Ye maine jaan bujh kar rakha: agla natural feature ek plan&rarr;retrieve&rarr;replan loop hai, aur wahan ye DAG nahi rahega — us waqt ek explicit iteration limit lagani paregi.</p>
+    </div></details>
+
+    <details><summary>Do parallel branches ek hi state key pe likh dein to?</summary><div class="ans">
+      <p>Bina reducer ke aakhri wali jeet jayegi aur data chup chaap gum ho jayega. Isliye <code>invocations</code>, <code>retrieval_errors</code> aur <code>node_path</code> par <code>operator.add</code> reducer laga hai, aur <code>flags</code> par dict-merge. Jin keys ko sirf ek node likhta hai — jaise <code>records</code>, <code>insights</code> — unhein reducer ki zaroorat nahi.</p>
+    </div></details>
+
+    <details><summary>Send kya hai aur kyun use kiya?</summary><div class="ans">
+      <p><code>Send</code> LangGraph ka tareeqa hai jisse ek conditional edge kai branches bana sakti hai. Planner 6 calls banata hai to 6 alag <code>retrieval_worker</code> node executions banti hain jo <strong>saath saath</strong> chalti hain.</p>
+      <p>Faida: har call ka apna time, apni retry count, apna failure record. Agar loop hota to chhe calls ka ek hi timing number milta, aur ek call fail hone se paanch achi calls bhi mar jatin.</p>
+    </div></details>
+  </div>
+
+  <div class="qgroup">
+    <h3>Tool calling</h3>
+    <details><summary>LLM ke tool arguments kaise validate karte ho?</summary><div class="ans">
+      <p>Teen marhale. Pehle <strong>alias repair</strong> — model aksar <code>keyword</code> ki jagah <code>query</code> likh deta hai, ek chhoti table un ginay-chunay synonyms ko theek karti hai. Phir <strong>Pydantic validation</strong> — <code>extra="forbid"</code> ke saath, taake model ka bana hua faltu field chup chaap ignore na ho balke pakra jaye. Teesra, <strong>fail closed</strong> — jo call ghalat hai wo ek structured rejection record ban jati hai jismein field-level detail hoti hai, aur baqi plan chalta rehta hai.</p>
+    </div></details>
+
+    <details><summary>Ek giant "call DataForSEO" tool kyun nahi banaya?</summary><div class="ans">
+      <p>Brief ne bhi mana kiya tha, aur wajah wazeh hai: ek hi tool ka matlab hai ke faisla ek free-text argument mein chala jayega jise check karne ke liye koi schema hi nahi. Alag tools ke saath har ek ke apne typed arguments hain, apni description hai jo model ko batati hai kab use karna hai, aur apna circuit breaker hai.</p>
+    </div></details>
+
+    <details><summary>Model ne 50 mahangi calls maang lein to?</summary><div class="ans">
+      <p><code>MAX_PLANNED_CALLS</code> plan ko kaat deta hai aur har extra call ka reason record karta hai. Tool descriptions bhi batati hain ke batch karo — <code>keyword_search_volume</code> ek call mein 20 keywords leta hai.</p>
+    </div></details>
+
+    <details><summary>Tumne plan mein "coverage top-up" kyun daala? Kya ye kharab model ko chhupana nahi?</summary><div class="ans">
+      <p>Nahi, kyunki wo <strong>record</strong> hota hai. Live testing mein Groq ka model chahe prompt jaisa bhi ho, ek hi tool call deta tha — aisa plan visibility ka sawal answer hi nahi kar sakta. Top-up sirf <strong>un queries ki coverage poori karta hai jo model ne khud chuni</strong>; nayi query kabhi nahi banata, aur khali plan pe kabhi nahi chalta (wo ab bhi <code>plan_fallback</code> pe jata hai).</p>
+      <p><code>plan_source</code> <code>model+topup</code> ho jata hai aur notes mein likha hota hai kya add hua — to plan ki quality naapi ja sakti hai. Chhupana wo hota agar main run ko patla chhor deta aur <code>unknown</code> ko finding bana ke pesh karta.</p>
+    </div></details>
+  </div>
+
+  <div class="qgroup">
+    <h3>DataForSEO</h3>
+    <details><summary>Tumne live API use nahi ki — phir kaise pata chale ye kaam karta hai?</summary><div class="ans">
+      <p>Brief ne mock ko saaf allow kiya tha, isliye committed default mock hai. Live client mukammal hai — Basic auth, alag connect/read timeouts, HTTP status classification, aur response body ke status codes.</p>
+      <p>Maine credentials verify bhi ki hain: auth pass hoti hai (HTTP 200), aur ek asli SERP call chala ke rankings bhi dekhi hain. Jo abhi bhi cover nahi hua wo production payloads ke real-world edge cases hain — funded account milte hi sabse pehle wahi reconcile karunga.</p>
+    </div></details>
+
+    <details><summary>DataForSEO API mein sabse tricky cheez kya thi?</summary><div class="ans">
+      <p>Wo <strong>200 OK</strong> bhejta hai lekin asli failure body mein hoti hai — aur do jagah: ek top-level <code>status_code</code> aur ek har task ka apna. Jo client sirf HTTP status pe bharosa kare wo ek fail hui task ko "khali result" samajh lega aur us query ke liye "not visible" report kar dega jo usne kabhi check hi nahi ki.</p>
+      <p><code>_unwrap()</code> dono levels ko HTTP layer wali error taxonomy mein mila deta hai, taake upar sirf ek qism ki exceptions dikhein.</p>
+      <p>Aur ek cheez live debugging mein mili: non-2xx pe bhi body mein kaam ki baat hoti hai. Mera client pehle sirf HTTP status pe raise kar deta tha aur wo line kho jati thi. Ab <code>[40104] Please verify your account</code> poora message aata hai.</p>
+    </div></details>
+  </div>
+
+  <div class="qgroup">
+    <h3>Resilience</h3>
+    <details><summary>Kaunsi errors retry karte ho aur kyun?</summary><div class="ans">
+      <p><strong>Retry:</strong> timeouts, connection errors, 408/425/429, saare 5xx, aur DataForSEO ke <code>40429</code> aur <code>5xxxx</code> codes.</p>
+      <p><strong>Retry nahi:</strong> 4xx — including 401/403 — aur DataForSEO ke <code>401xx</code>/<code>402xx</code>.</p>
+      <p>Asool ye hai: <em>kya yehi request bina badle kaamyab ho sakti hai?</em> 400 ka matlab mera payload ghalat hai; usay 4 baar bhejna sirf 4 ghalat requests hain.</p>
+    </div></details>
+
+    <details><summary>Backoff samjhao.</summary><div class="ans">
+      <p><code>uniform(0, min(base &times; 2^(attempt-1), max_delay))</code> — exponential, capped, <strong>full jitter</strong>. Aur agar server <code>Retry-After</code> bheje to wo jeet jata hai.</p>
+      <p>Full jitter isliye ke fan-out ki wajah se saari calls ek hi lamhe mein jati hain — agar wo saath fail hoon to saath retry karengi. Full jitter unhein sabse zyada phailata hai. Equal jitter ka guaranteed floor yahan kuch nahi deta.</p>
+    </div></details>
+
+    <details><summary>Circuit breaker kab khulta hai, aur har endpoint ka alag kyun?</summary><div class="ans">
+      <p>Ek endpoint pe paanch lagatar failures. Har endpoint ka alag isliye ke DataForSEO ka AI Overview endpoint down hone ka matlab ye nahi ke SERP endpoint bhi down hai — wo alag alag fail hote hain.</p>
+      <p>Cooldown ke baad ek half-open probe jane deta hai: kaamyab hui to band, fail hui to dobara khul jata hai aur timer reset.</p>
+    </div></details>
+
+    <details><summary>Circuit breaker ka koi bug pakra tumne?</summary><div class="ans">
+      <p>Haan, aur ye achi kahani hai. <code>CircuitOpenError</code> <code>TransientToolError</code> se inherit karta hai, to retry loop usay pakar ke <code>retry_after</code> tak so jata tha — 8 second — sirf usi nateeje pe pohanchne ke liye jo breaker pehle hi de chuka tha. <strong>Fast-fail hi breaker ka poora maqsad hai.</strong> Theek karne se failure demo 30+ second se 1.8 second pe aa gaya.</p>
+    </div></details>
+
+    <details><summary>Aadhi retrieval fail ho jaye to customer ko kya milta hai?</summary><div class="ans">
+      <p>HTTP <strong>200</strong>. Status <code>partial</code>, <code>degraded: true</code>, jo queries mili unke asli scores, jo nahi mileen unka <code>visibility_status: "unknown"</code>, aur report par ek caveat jo saaf batata hai kya missing hai.</p>
+      <p>Ek cheez main kabhi nahi karta: jo query check hi nahi hui usay <code>not_visible</code> nahi likhta. Wo customer ko aisa content likhwa dega jiski shayad zaroorat hi nahi.</p>
+    </div></details>
+
+    <details><summary>LLM down ho jaye, DataForSEO nahi — to?</summary><div class="ans">
+      <p>Teen alag guards. Planner pakar ke <code>plan_fallback</code> pe chala jata hai. Analysis pakar ke mechanical findings bana leta hai — narrative jata hai, ranking nahi. Report pakar ke apni deterministic markdown summary bana leta hai. Ek test jaan bujh kar analysis model ko crash karata hai aur check karta hai ke run phir bhi poora scored table ke saath complete ho.</p>
+    </div></details>
+  </div>
+
+  <div class="qgroup">
+    <h3>Observability</h3>
+    <details><summary>Main on-call hoon, customer kehta hai run slow hai. Kya karoge?</summary><div class="ans">
+      <p>Response se <code>run_uuid</code> lo aur <code>GET /api/v1/runs/{run_uuid}</code> maaro. Wahan node-by-node table milta hai: kaunsa node, kitna time, kitni retries, kaunsa tool fail hua. Agar retrieval worker pe retries hain to per-tool <code>api_failures</code> batata hai kaunsa endpoint.</p>
+      <p>Aur detail chahiye to har log line pe <code>run_id</code> laga hai — ek filter se poora trace mil jata hai, backoff sleeps aur breaker transitions samet.</p>
+    </div></details>
+
+    <details><summary>LangSmith kyun nahi use kiya?</summary><div class="ans">
+      <p>Dono chahiye, aur dono alag sawal ka jawab dete hain. LangSmith prompt aur response level pe batata hai — model ne teen ghalat tool calls dein aur raw output ye tha. Correlation-ID trace system level pe batata hai — node 6 ne 1.2 second backoff mein guzare AI Mode endpoint ke against. Incident ke waqt doosri cheez pehle chahiye hoti hai, aur wo kisi third-party service ke chalne pe depend nahi karti.</p>
+    </div></details>
+
+    <details><summary>Logs mein kya chhupate ho aur kyun?</summary><div class="ans">
+      <p>Password jaisi keys kisi bhi depth pe <code>***</code> ban jati hain. Lambi strings aur lists kat jati hain, recursion depth-bounded hai. Do wajah: ek raw SERP response ~80 KB ka hota hai aur poora log karne se asli signal dab jata hai; aur logs third-party aggregators pe jate hain — customer ka data wahan pohanchna ek aisa leak hai jo kisi ko nazar nahi aata.</p>
+    </div></details>
+
+    <details><summary>Observability layer mein koi bug mila?</summary><div class="ans">
+      <p>Haan. <code>logging.makeRecord</code> <code>KeyError</code> phenkta hai agar <code>extra</code> mein koi aisa naam ho jo <code>LogRecord</code> ka apna attribute hai — aur <code>message</code> dono cheezein hai: reserved bhi, aur error dict ke liye sabse natural key bhi.</p>
+      <p>To mera pehla version <strong>har rejected tool call pe crash</strong> karta tha — bilkul wahi raasta jo graceful hona chahiye tha. Test ne pakra. Fix <code>safe_extra()</code> hai jo takraane wale naamon ko prefix kar deta hai.</p>
+    </div></details>
+
+    <details><summary>Production mein kis cheez pe alert lagate?</summary><div class="ans">
+      <p>DataForSEO error rate 5% se upar 5 minute tak; koi bhi circuit ek minute se zyada khula; p95 run duration; aur <code>partial</code>/<code>failed</code> runs ka ratio.</p>
+      <p>Aakhri wala wo hai jo log bhool jate hain — wo <strong>khamosh quality decay</strong> pakarta hai, jahan har run technically kaamyab hota hai lekin data patla se patla hota jata hai.</p>
+    </div></details>
+  </div>
+
+  <div class="qgroup">
+    <h3>API aur Database</h3>
+    <details><summary>Run synchronous kyun hai?</summary><div class="ans">
+      <p>Brief ne allow kiya tha aur isse submission focused rahi. Production ke liye ye ghalat hai — 10 se 30 second ki held request load balancer timeout ya deploy nahi jhelti. Sahi shakal hai <code>202 Accepted</code> + queue + status polling. Seam pehle se theek hai: <code>PipelineService.run_profile</code> ek profile leta hai aur run wapas deta hai, request-scoped kuch bhi chhoota nahi.</p>
+    </div></details>
+
+    <details><summary>Duplicate domain pe 409 kyun, existing profile kyun nahi wapas kiya?</summary><div class="ans">
+      <p>Kyunki collection pe <code>POST</code> ka matlab "banao" hai. Chup chaap purana resource wapas karna client ka bug chhupata hai. Agar upsert chahiye to wo <code>PUT</code> hai domain-keyed URL pe. 409 body mein conflicting domain ke saath client ko theek theek batata hai kya hua.</p>
+    </div></details>
+
+    <details><summary>Recheck ka aisa kya masla tha?</summary><div class="ans">
+      <p>Ye asli bug tha jo maine pakra. Recheck bhi ek "run" hai, to <code>/queries</code> endpoint "latest run" resolve karke <strong>recheck</strong> pe pohanch jata tha — aur recheck ka apna query set nahi hota. Nateeja: koi bhi recheck karte hi queries aur recommendations dono khali ho jate the.</p>
+      <p>Fix: recheck <code>trigger="recheck"</code> ke saath record hota hai aur "latest full run" ke muqable mein ginta nahi. Ek regression test bilkul isi cheez ko pin karta hai.</p>
+    </div></details>
+
+    <details><summary>node_executions table kyun banayi jab logs pehle se hain?</summary><div class="ans">
+      <p>Alag retention aur alag query pattern. Logs roll off ho jate hain aur join nahi hote. Table se mahine baad bhi SQL mein poocha ja sakta hai: "wo saare runs dikhao jahan analysis node ne 2 second se zyada liye." Logs detail rakhte hain, table run ki <em>shakal</em> rakhti hai.</p>
+    </div></details>
+
+    <details><summary>Tumhare indexes justify karo.</summary><div class="ans">
+      <p><code>(profile_uuid, opportunity_score)</code> kyunki <code>/queries</code> profile pe filter karta hai aur score pe descending sort — SQLite plain index se ye sort nahi karega. <code>(run_uuid, visibility_status)</code> kyunki status filter hamesha ek run ke andar chalta hai. Dono composite hain usi tarteeb mein jis mein queries chalti hain.</p>
+    </div></details>
+  </div>
+
+  <div class="qgroup">
+    <h3>Scoring</h3>
+    <details><summary>Volume pe log kyun lagaya?</summary><div class="ans">
+      <p>Search volume heavy-tailed hoti hai. 50,000 ke ceiling ke against linear normalization 100-search wali query ko 0.002 deti hai — sifar se farq hi nahi — to ek head term poori ranking pe qabza kar leta hai aur saare long-tail mauqe ghayab ho jate hain. Log space mein wohi query 0.4 se upar aati hai, aur volume double hone ki qeemat har jagah taqreeban barabar rehti hai. <code>+1</code> volume sifar ke liye hai. Ek test bilkul yehi property check karta hai.</p>
+    </div></details>
+
+    <details><summary>Weights kahan se aaye?</summary><div class="ans">
+      <p>Maine chune, kisi data se fit nahi kiye — isiliye wo constants nahi balke <code>.env</code> mein hain. Visibility gap ko sabse zyada weight is liye ke wo actionability se sabse seedha juda hai. Sahi tareeqa ye hai ke customer ki labelled queries lo aur weights fit karo — yehi mera "golden-set eval harness" wala agla qadam hai.</p>
+    </div></details>
+
+    <details><summary>Score LLM se kyun nahi banwaya?</summary><div class="ans">
+      <p>Teen wajah. <strong>Reproducible</strong> — wahi data, wahi ranking, har baar. <strong>Auditable</strong> — customer poochhe ke ye query teesre number pe kyun hai to hisaab dikha sakta hoon. <strong>Stable</strong> — model upgrade se har customer ka roadmap chup chaap badalna nahi chahiye. LLM wahi karta hai jismein wo acha hai: qualitative narrative.</p>
+    </div></details>
+
+    <details><summary>Visibility boolean kyun nahi, teen states kyun?</summary><div class="ans">
+      <p>Kyunki "humne check kiya aur tum wahan nahi ho" aur "hum check hi nahi kar sake" bilkul alag baatein hain. Inhein milane se customer aisi query pe content likh dega jispe wo pehle se rank kar raha hai. Retrieval degrade ho to wo queries <code>unknown</code> aati hain aur 0.6 gap pe score hoti hain — maani-khez uncertainty, aatm-vishwas ke saath ghalat nahi.</p>
+    </div></details>
+  </div>
+
+  <div class="qgroup">
+    <h3>Testing aur scaling</h3>
+    <details><summary>Tumhara sabse qeemti test kaunsa hai?</summary><div class="ans">
+      <p><code>test_partial_upstream_outage_degrades_but_still_reports</code>. Wo paanch mein se teen endpoints down karta hai aur check karta hai ke run partial raasta le, bache hue data ko phir bhi normalize kare, report phir bhi bane, khud ko degraded mark kare, aur mutasira queries ko <code>not_visible</code> ke bajaye <code>unknown</code> bataye. Chaar alag correctness properties ek saath — aur yehi test wo bug pakarta tha jahan kaamyab retrievals phenki ja rahi thin.</p>
+    </div></details>
+
+    <details><summary>LLM wale pipeline ko deterministic kaise test karte ho?</summary><div class="ans">
+      <p><code>ScriptedChatModel</code> <code>BaseChatModel</code> implement karta hai aur bilkul wohi shakal wapas deta hai jo asli provider deta hai — usi structure ki tool calls, usi shakal ka JSON. Default mein wo prompt se ek maqool plan bana leta hai taake offline path bhi asli edges chale; tests <code>responses</code> override karke khali plan, ghalat arguments, ya crash force karte hain. Graph ko farq hi nahi parta.</p>
+    </div></details>
+
+    <details><summary>Hazaar profiles, rozana runs — kya badlega?</summary><div class="ans">
+      <p>Runs queue karo — ye blocking cheez hai. SQLite ki jagah Postgres. Circuit breaker state shared (Redis). Response caching normalized tool arguments pe, kyunki us volume pe wohi head terms bar bar maange jate hain aur DataForSEO per task bill karta hai. Aur DataForSEO client pe rate limiting — abhi fan-out utna hi parallel hai jitna plan chaura hai, jo 6 calls pe theek hai aur 600 pe nahi.</p>
+    </div></details>
+
+    <details><summary>Is codebase ka sabse kamzor hissa kya hai?</summary><div class="ans">
+      <p>Extraction agent mein brand-mention detection. Wo substring matching hai — "Surfer SEO" ke liye <code>surferseo.com</code> ke against theek, lekin aise brand ke liye ghalat jiska naam koi aam lafz ho. Aise customers ke liye wo <strong>aatm-vishwas ke saath ghalat</strong> visibility data banayega, jo bilkul data na banane se bura hai. Kam se kam per-profile alias list chahiye, shayad NER pass. Maine isliye chhora ke brief ke profiles ke liye theek hai, aur main limitation chhupane ke bajaye saaf likhna behtar samajhta hoon.</p>
+    </div></details>
+  </div>
+
+  <div class="qgroup">
+    <h3>Mushkil sawal</h3>
+    <details><summary>create_react_agent kyun nahi use kiya, mehnat bach jati?</summary><div class="ans">
+      <p>Kyunki brief ka sabse bara criterion yehi hai ke koi agent data laane aur sochne dono na kare — aur ReAct agent theek wahi ek agent hai jo dono karta hai.</p>
+      <p>Brief se hat kar bhi: ReAct ke saath main plan paisa kharch hone se pehle dekh nahi sakta, call budget enforce nahi kar sakta, parallel fan-out nahi kar sakta, aur trace ek message list hoti hai na ke node graph. Wo tab sahi tool hai jab agla qadam waqai pichle nateeje pe depend karta ho. Yahan retrieval set pehle se maloom kiya ja sakta hai.</p>
+    </div></details>
+
+    <details><summary>5-7 ghante ke take-home ke liye bohat zyada infrastructure likh di.</summary><div class="ans">
+      <p>Brief ne khud kaha tha ke usay happy path se zyada failure handling aur observability ki fikr hai — to waqt wahan gaya. Jo cheezein extra infrastructure lagti hain — error taxonomy, retry policy, metrics collector — har ek sau line se kam hai, aur wohi failure paths ko testable banati hain. Scoring aur extraction chhote aur seedhe hisse hain.</p>
+    </div></details>
+
+    <details><summary>Kya delete karoge?</summary><div class="ans">
+      <p><code>related_keyword_ideas</code> sabse kamzor tool hai — planner usay kam hi chunta hai aur uska output sirf analysis ko context deta hai. Aur <code>ToolSpec.cost_weight</code> declare to hai lekin sirf documented hai, enforce nahi. Ya to usay asli budget check mein daloon ya hata doon.</p>
+    </div></details>
+
+    <details><summary>Agar hum tumhe hire karein aur ye Monday ko production jaye, sabse pehle kya theek karoge?</summary><div class="ans">
+      <p>Run ko request thread se hataunga. Baqi sab kuch gracefully degrade karta hai; ek synchronous 30-second endpoint nahi karta — wo load balancer pe fail hota hai, deploy pe fail hota hai, aur safely retry bhi nahi ho sakta kyunki run idempotent nahi. Yehi wo cheez hai jo maujuda design absorb nahi kar sakta.</p>
+    </div></details>
+  </div>
+</section>
+
+<section id="s7">
+  <h2><span class="n">07</span>Demo kaise dena hai</h2>
+  <p class="lede">Isi tarteeb mein chalao. Har command copy karne ke liye tayyar hai.</p>
+
+  <ol class="steps">
+    <li><b>Tests dikhao</b><span>Sabse pehle — 124 tests pass hote hain. Free hai, 7 second lagte hain.</span><em>make test</em></li>
+    <li><b>Normal run dikhao</b><span>Poora pipeline — 6 parallel calls, saara raasta. Free (mock mode).</span><em>DATAFORSEO_MODE=mock make demo</em></li>
+    <li><b>Failure handling dikhao</b><span>Ye sabse zabardast hai. Teen endpoints down, retry hoti hai, circuit breaker khulta hai, aur run phir bhi report banata hai.</span><em>DATAFORSEO_MODE=mock make demo-failure</em></li>
+    <li><b>API kholo</b><span>Browser mein http://127.0.0.1:8000/docs — wahan se click karke poora flow chala sakte ho.</span><em>make run</em></li>
+    <li><b>Trace dikhao</b><span>Ye screen pe rakhna. Ek hi response mein DAG ka raasta, har node ka time, retry counts aur per-tool failures.</span><em>GET /api/v1/runs/{run_uuid}</em></li>
+  </ol>
+
+  <div class="callout">
+    <span class="lbl">Khayal rakhna</span>
+    <p><code>DATAFORSEO_MODE=mock</code> zaroor likhna. Warna har run <strong>asli paisa</strong> kharch karega. Account mein taqreeban <strong>$0.58</strong> bache hain — yani sirf 5 aur live runs.</p>
+  </div>
+</section>
+
+<section id="s8">
+  <h2><span class="n">08</span>Sach jo khud batana hai</h2>
+  <p class="lede">Apni hadood khud bata dena senior engineer ki nishani hai. Chhupane se hamesha bura lagta hai jab interviewer khud pakar le.</p>
+
+  <div class="tbl"><table>
+    <thead><tr><th>Cheez</th><th>Sach kya hai</th></tr></thead>
+    <tbody>
+      <tr><td><span class="yn y">asli</span></td><td><strong>Google rankings</strong> — bilkul asli. surferseo.com waqai #18 pe tha, maine alag se verify kiya.</td></tr>
+      <tr><td><span class="yn y">asli</span></td><td><strong>Search volume</strong> — Google Ads se aata hai.</td></tr>
+      <tr><td><span class="yn n">default</span></td><td><strong>Difficulty = 50</strong> — ye asli data <em>nahi</em>. Jab competition index nahi milta to code midpoint daal deta hai. Isliye opportunity score ek asli aur ek placeholder number ka mix hai. Ye jaan bujh kar hai — 50 daalna behtar hai bajaye score ko jhoota flatter ya punish karne ke.</td></tr>
+      <tr><td><span class="yn n">LLM</span></td><td><strong>Report ka narrative</strong> — Groq ne likha, lekin <em>sirf asli numbers se</em>. Score aur ranking formula se aate hain.</td></tr>
+      <tr><td><span class="yn n">meri choice</span></td><td><strong>Scoring weights</strong> — maine chune, kisi dataset se fit nahi kiye.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Paanch cheezein saaf keh dena</h3>
+  <ul>
+    <li>"Maine <strong>mock mode</strong> mein chalaya. Live client mukammal hai aur auth verify kiya hai, lekin data synthetic hai."</li>
+    <li>"<strong>Weights fit nahi kiye</strong> — reasoned defaults hain, configurable hain, aur mujhe pata hai kaise fit karne chahiye."</li>
+    <li>"<strong>Brand matching substring pe hai</strong> aur kuch brands ke liye ghalat hogi."</li>
+    <li>"<strong>Synchronous runs production ke liye ghalat hain</strong>, aur exact change ye hai."</li>
+    <li>"Do bugs maine khud introduce kiye aur pakre — circuit breaker ka fast-fail, aur logger ka error path pe crash. Dono fix hain, dono ke tests hain."</li>
+  </ul>
+
+  <div class="callout t">
+    <span class="lbl">Sabse ahem</span>
+    <p>Apna banaya hua bug naam le kar batana us se kahin zyada wazan rakhta hai ke tum daawa karo ke koi bug tha hi nahi.</p>
+  </div>
+
+  <h3>Yaad rakhne ke numbers</h3>
+  <div class="tbl"><table>
+    <tbody>
+      <tr><td><strong>9 nodes</strong></td><td>jinme se 5 wo agents hain jo brief ne maange</td></tr>
+      <tr><td><strong>3 conditional routers</strong></td><td>planner ke baad, retrieval ke baad, extraction ke baad</td></tr>
+      <tr><td><strong>5 tools</strong></td><td>har DataForSEO endpoint ka ek</td></tr>
+      <tr><td><strong>124 tests</strong></td><td>~7 second, bina network ke</td></tr>
+      <tr><td><strong>Retry</strong></td><td>4 attempts, 0.4s base, 8s cap, full jitter</td></tr>
+      <tr><td><strong>Circuit breaker</strong></td><td>5 failures, 30s cooldown, har endpoint alag</td></tr>
+      <tr><td><strong>Success threshold</strong></td><td>0.5</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Ye paanch files khuli rakhna</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>File</th><th>Kya sabit karti hai</th></tr></thead>
+    <tbody>
+      <tr><td><code>graph/builder.py</code></td><td>Poora DAG ek screen mein — nodes, routers, fan-out</td></tr>
+      <tr><td><code>tools/registry.py</code></td><td>Validation, alias repair, fail closed</td></tr>
+      <tr><td><code>resilience/retry.py</code></td><td>Backoff, jitter, circuit fast-fail</td></tr>
+      <tr><td><code>scoring.py</code></td><td>Formula, wajah comments mein likhi hui</td></tr>
+      <tr><td><code>tests/test_pipeline.py</code></td><td>Failure paths, assert kiye hue</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<footer>
+  <p>Agentic Search Intelligence &middot; AI Agent Engineer assessment &middot; Aegasis Labs</p>
+</footer>
+</main>
+</div>
+
+<script>
+function setAll(open){document.querySelectorAll("details").forEach(function(d){d.open=open;});}
+window.addEventListener("beforeprint",function(){setAll(true);});
+document.querySelectorAll(".ctrl button").forEach(function(b){
+  b.addEventListener("click", function(){
+    var open = b.dataset.all === "1";
+    document.querySelectorAll("details").forEach(function(d){ d.open = open; });
+  });
+});
+</script>

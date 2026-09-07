@@ -1,0 +1,27 @@
+{
+  "version": "0.1.20241120",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "0.4412 sec.",
+  "cost": 0.005,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "11150000-0000-0000-0000-000000000004",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "0.3910 sec.",
+      "cost": 0.005,
+      "result_count": 0,
+      "data": {
+        "api": "keywords_data",
+        "function": "search_volume",
+        "se": "google_ads",
+        "language_code": "en",
+        "location_name": "United States"
+      },
+      "result": []
+    }
+  ]
+}

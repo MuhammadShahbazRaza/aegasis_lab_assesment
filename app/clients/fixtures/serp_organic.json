@@ -1,0 +1,45 @@
+{
+  "version": "0.1.20241120",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "1.8341 sec.",
+  "cost": 0.002,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "11150000-0000-0000-0000-000000000001",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "1.7012 sec.",
+      "cost": 0.002,
+      "result_count": 1,
+      "data": {
+        "api": "serp",
+        "function": "live",
+        "se": "google",
+        "se_type": "organic",
+        "language_code": "en",
+        "location_name": "United States",
+        "keyword": "__KEYWORD__",
+        "device": "desktop",
+        "os": "windows"
+      },
+      "result": [
+        {
+          "keyword": "__KEYWORD__",
+          "type": "organic",
+          "se_domain": "google.com",
+          "location_code": 2840,
+          "language_code": "en",
+          "check_url": "https://www.google.com/search?q=__KEYWORD_ENC__",
+          "datetime": "__DATETIME__",
+          "item_types": ["organic", "people_also_ask"],
+          "se_results_count": 41300000,
+          "items_count": 0,
+          "items": []
+        }
+      ]
+    }
+  ]
+}

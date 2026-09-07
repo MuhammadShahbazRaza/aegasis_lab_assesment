@@ -1,0 +1,36 @@
+{
+  "version": "0.1.20241120",
+  "status_code": 20000,
+  "status_message": "Ok.",
+  "time": "1.1002 sec.",
+  "cost": 0.011,
+  "tasks_count": 1,
+  "tasks_error": 0,
+  "tasks": [
+    {
+      "id": "11150000-0000-0000-0000-000000000005",
+      "status_code": 20000,
+      "status_message": "Ok.",
+      "time": "1.0111 sec.",
+      "cost": 0.011,
+      "result_count": 1,
+      "data": {
+        "api": "dataforseo_labs",
+        "function": "keyword_ideas",
+        "se_type": "google",
+        "language_code": "en",
+        "location_name": "United States"
+      },
+      "result": [
+        {
+          "se_type": "google",
+          "location_code": 2840,
+          "language_code": "en",
+          "total_count": 0,
+          "items_count": 0,
+          "items": []
+        }
+      ]
+    }
+  ]
+}
